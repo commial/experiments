@@ -21,6 +21,8 @@ Sources collected (ending the 2020/03/22):
 * Let's Encrypt 'Oak2021' log, full
 * Let's Encrypt 'Oak2022' log, full
 
+(The resulting files are too large to be hosted on Github, so for now, you can email me if you want them)
+
 ## Statistics
 
 The extraction of CN and SAN leads to 482 748 070 uniq entries.
@@ -130,7 +132,87 @@ hzwjmjimhr7bdmfv2doll4upibt5ojjmpo3pbp5ctwcg37n3hyk7qzid.onion
 *.stats.qklykfiomrwjhdz4.onion
 ```
 
+# Homoglyphs
+
+There already are ressources out there on homoglyphs.
+
+Regarding domain names, the following must be considered:
+
+* IDN display algorithm, depending on browser (such as [2] for Firefox)
+* Alphabets and characters authorized for the different TLDs (such as [3] for `.fr`)
+
+Several databases of homoglyphs are available, such as:
+
+* [UriDeep](https://github.com/mindcrypt/uriDeep): "Unicode encoding attacks with machine learning"
+* http://homoglyphs.net/
+* https://unicode.org/Public/security/latest/confusables.txt
+
+A few tools implements these attacks, along with domain checking:
+
+* https://holdintegrity.com/checker
+* [4], already mentionned
+* [DnsTwist](https://github.com/elceef/dnstwist), my perosnnal favorite so far
+* [HaFinder](https://github.com/loganmeetsworld/homographs-talk.git)
+
+## Homoglyphs in certificate transparency lists
+
+Giving the list obtained through certificate transparency, let's try to find
+some homoglyphs domain names.
+I try to normalize domain names to an ASCII one, using homoglyphs from [4], with
+a few modifications to reduce false positive and includes AFNIC homoglyphs
+([3]). Then, the domain is compared to the Alexa top 1M.
+
+The naive implementation (in [homoglyphs.py](homoglyphs.py)) gives back [homoglyphs.txt](homoglyphs.txt). It contains a few false positive but around 2000 homoglyph entries, such as:
+```
+defense.gouv.fr (defense.göuv.fr - https://defense.xn--guv-sna.fr)
+defense.gouv.fr (defense.göüv.fr - https://defense.xn--gv-fkay.fr)
+www.com (ԝԝԝ.com - https://xn--07aaa.com)
+google.com (ɢᴏᴏɢʟᴇ.com - https://xn--1naa7pn51hcbaa.com)
+bitcoin.com (ʙɪᴛᴄᴏɪɴ.com - https://xn--9naa4azkq66k5ba2d.com)
+adidas.com (adidȧs.com - https://xn--adids-wcc.com)
+aliorbank.pl (aliorbanķ.pl - https://xn--aliorban-kmb.pl)
+amazon.com (amɑzon.com - https://xn--amzon-1jc.com)
+amazon.com (amäzon.com - https://xn--amzon-hra.com)
+amazon.com (amȧzon.com - https://xn--amzon-ucc.com)
+amazon.com (amázon.com - https://xn--amzon-yqa.com)
+bestchange.com (besțchange.com - https://xn--beschange-smd.com)
+bestchange.com (bestchaņge.com - https://xn--bestchage-1vb.com)
+bestchange.com (bestchańge.com - https://xn--bestchage-hvb.com)
+bestchange.com (bestchaňge.com - https://xn--bestchage-mwb.com)
+bestchange.com (bestchanĝe.com - https://xn--bestchane-dkb.com)
+bestchange.com (bestchanġe.com - https://xn--bestchane-ilb.com)
+bestchange.com (bestchangé.com - https://xn--bestchang-j4a.com)
+bestchange.com (bestchangē.com - https://xn--bestchang-jhb.com)
+bestchange.com (bestchɑnɡe.com - https://xn--bestchne-0od5n.com)
+bestchange.com (bestchánge.com - https://xn--bestchnge-51a.com)
+bestchange.com (bestchânge.com - https://xn--bestchnge-g2a.com)
+bestchange.com (bestćhange.com - https://xn--besthange-ydb.com)
+bestchange.com (beꜱtchange.com - https://xn--betchange-mm26a.com)
+bestsecret.com (bestsecɾet.com - https://xn--bestsecet-6fe.com)
+facebook.com (facébook.com - https://xn--facbook-dya.com)
+facebook.com (facêbook.com - https://xn--facbook-lya.com)
+facebook.com (facēbook.com - https://xn--facbook-y7a.com)
+facebook.com (facebᴏᴏk.com - https://xn--facebk-m15ba.com)
+facebook.com (faceboök.com - https://xn--facebok-f1a.com)
+facebook.com (facebôok.com - https://xn--facebok-x0a.com)
+facebook.com (faceboȯk.com - https://xn--facebok-y2c.com)
+facebook.com (facebooⱪ.com - https://xn--faceboo-2o7e.com)
+facebook.com (facebooķ.com - https://xn--faceboo-bhb.com)
+facebook.com (faceɓook.com - https://xn--faceook-4bd.com)
+facebook.com (faćebook.com - https://xn--faebook-64a.com)
+```
+
+
 # References
 
 * [1] `axeman`: https://github.com/calidog/axeman
-
+* [2] https://wiki.mozilla.org/IDN_Display_Algorithm
+* [3] https://www.afnic.fr/medias/documents/Cadre_legal/afnic-charte-de-nommage-2014-12-08.pdf
+```
+Sont admis au titre de noms de domaine les caractères alphanumériques suivants: a, à, á, â, ã, ä, å, æ, b, c, ç, d, e, è, é, ê, ë, f, g, h, i, ì, í, î, ï, j, k, l, m, n, ñ, o, ò, ó, ô, õ, ö, œ, p, q, r, s, t, u, ù, ú, û, ü,v, w, x, y, ý, ÿ, z, ß, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -(signe moins)
+```
+* [4] [UriDeep](https://github.com/mindcrypt/uriDeep)
+* [5] [DnsTwist](https://github.com/elceef/dnstwist)
+* [6] https://holdintegrity.com/checker
+* [7] http://homoglyphs.net/
+* [8] https://unicode.org/Public/security/latest/confusables.txt
