@@ -7,7 +7,7 @@ technologies.
 
 Data comes from the Certificate transparency log list of [Google](https://www.gstatic.com/ct/log_list/log_list.json).
 
-Certificates have been obtained through [1].
+Certificates have been obtained through [1] (for live stream, [2] is quite good).
 Sources collected (ending the 2020/03/22):
 
 * Google 'Argon2020', ~ 10%
@@ -216,3 +216,4 @@ Sont admis au titre de noms de domaine les caractères alphanumériques suivants
 * [6] https://holdintegrity.com/checker
 * [7] http://homoglyphs.net/
 * [8] https://unicode.org/Public/security/latest/confusables.txt
+* [9] https://certstream.calidog.io/
