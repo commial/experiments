@@ -3,9 +3,9 @@
 [Attack Surface Reduction (ASR)](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/overview-attack-surface-reduction?view=o365-worldwide) is a Microsoft feature to "Reduce vulnerabilities (attack surfaces) in your applications with intelligent rules that help stop malware.".
 
 This repository tries to describe what are the rules and what they are actually checking.
-This is likely no complete, and only limited to the author comprehension of ASR.
+This is likely not complete, and only limited to the author's comprehension of ASR.
 
-Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf)). Still, it could be argue that these rules might be a good way to limit low-level, widespread, attack attempts.
+Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf)). Still, it could be argued that these rules might be a good way to limit low-level, widespread, attack attempts.
 
 ## Finding ASR rules implementation
 
@@ -23,7 +23,7 @@ It looks like the ASR rules are implemented and enforced by Windows Defender.
 
 The rules are configured through the registry key `HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules`.
 
-For instance, to enabled the rule "Use advanced protection against ransomware" (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one add a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
+For instance, to enable the rule "Use advanced protection against ransomware" (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one adds a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
 
 As expected, on `Windows Defender Service` start, one can observe the key reading from `MsMpEng`, the Windows Defender engine:
 ![](img/procmon_msmpeng.png)
@@ -84,7 +84,7 @@ fffff801`beb3ef43
 
 (This method is also documented [here](https://qiita.com/msmania/items/19547606b9c197c64d70) or [here](https://github.com/Mattiwatti/PPLKiller/pull/6#issuecomment-346198366), and on some cheating forums :) )
 
-Now we can set a breakpoint on `IsHipsRuleEnabled`. Asking for a scan on a file, our breakpoint is reached; looking at the call stack, it indeed comes from the lua interpretor, especially the `luaD_precall` and `luaD_call` functions.
+Now we can set a breakpoint on `IsHipsRuleEnabled`. Asking for a scan on a file, our breakpoint is reached; looking at the call stack, it indeed comes from the Lua interpretor, especially the `luaD_precall` and `luaD_call` functions.
 
 ### Decompiling the scripts
 
@@ -213,16 +213,16 @@ do
 end
 ```
 
-There are still a few decompilation error, but the code is now understandable.
+There are still a few decompilation errors, but the code is now understandable.
 
-The first function `l_0_0` returns if the parameter is on of the following extension (`1952539182` is `.bat` in ASCII under the proper endianness):
+The first function `l_0_0` returns if the parameter is one of the following extensions (`1952539182` is `.bat` in ASCII under the proper endianness):
 ```
 .bat, .cmd, .com, .cpl, .exe, .pif, .scr, .vbs, .lnk, .wsf, .vbe, .jse, .hta, .js, .dll, .ocx, .jar, .wsc, .wsh
 ```
 
-The main code first check if the rules is enabled in the `HipsManager`.
+The main code first checks if the rules are enabled in the `HipsManager`.
 
-Then, it check the reason it has been called (`mp.SCANREASON_ONMODIFIEDHANDLECLOSE`, `mp.SCANREASON_ONOPEN`, etc.), if it is a fresh data, the header page size, a magic (`PK\x03\x04`), and so on.
+Then, it checks the reason it has been called (`mp.SCANREASON_ONMODIFIEDHANDLECLOSE`, `mp.SCANREASON_ONOPEN`, etc.), if it is a fresh data, the header page size, a magic (`PK\x03\x04`), and so on.
 
 Note that at one point, it is setting an attribute:
 ```lua
@@ -237,7 +237,7 @@ From the understanding of the author, this attribute can then be reused by other
 
 If we come accross the different scripts that can be extracted, we found a lot of different things:
 
-* "Infrastructure" scripts, used to check some configuration, restore host files, etc.
+* "Infrastructure" scripts, used to check some configurations, restore host files, etc.
 ```lua
 Infrastructure_FixHostsFile = function()
   -- function num : 0_100
@@ -328,7 +328,7 @@ end
 These functions are called from the MpEngine side, in `HipsManager::LoadRulesFromDatabase` > `CallInitScripts`:
 ![](img/ida_callinitscripts.png)
 
-We can track the structure instancied in these function to see them used in `HipsManager::IsASRExcludedTarget` > `HipsManager::IsRuleExcludedTarget`, for example.
+We can track the structure instantiated in these function to see them used in `HipsManager::IsASRExcludedTarget` > `HipsManager::IsRuleExcludedTarget`, for example.
 
 ### Rule example 2: Block Adobe Reader from creating child processes
 
@@ -743,13 +743,13 @@ l_0_0[".dll"] = true
 local l_0_1 = (mp.get_contextdata)(mp.CONTEXT_DATA_FILENAME)
 ```
 
-A list of extension is then prepared. This is the list of extension considered as "executable content", which will be refused.
+A list of extensions is then prepared. This is the list of extensions considered as "executable content", which will be refused.
 
 ### Expected behavior
 
 For instance, we can test that rule using the demo [ASR test tool](https://demo.wd.microsoft.com/Page/ASR2).
 
-First, we enabled the rule:
+First, we enable the rule:
 ![](img/rule_enable_3B.png)
 
 Then we run the test scenario:
@@ -759,7 +759,7 @@ Then we run the test scenario:
 The tool is actually creating a fake file (here `C:\Program Files\Microsoft Office\Office16\excel.exe`) which will create a file with a forgiven extension. As the test made by ASR is based on ImagePath, it is indeed blocked.
 
 We can ensure the option is actually working for real using VBA in Excel.
-We wrote a dummy *download-and-exec* script, and lauched it in Excel:
+We write a dummy *download-and-exec* script, and lauch it in Excel:
 
 ![](img/ASR_excel_block.png)
 
@@ -891,8 +891,8 @@ if (l_0_1:sub(-20)):match("(%.[%w%-]+)$") ~= nil or not "" then
 end
 ```
 
-Some of them are harldy exploitable, as they check the whole path.
-But others seems really interesting, such as:
+Some of them are hardly exploitable, as they check the whole path.
+But others seem' really interesting, such as:
 ```lua
 if l_0_3 == ".exe" and l_0_4:find("\\think-cell\\", 1, true) ~= nil then
     return mp.CLEAN
