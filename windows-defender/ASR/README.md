@@ -5,7 +5,7 @@
 This repository tries to describe what are the rules and what they are actually checking.
 This is likely not complete, and only limited to the author's comprehension of ASR.
 
-Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf)). Still, it could be argued that these rules might be a good way to limit low-level, widespread, attack attempts.
+Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf) or [this gist from infosecn1nja](https://gist.github.com/infosecn1nja/24a733c5b3f0e5a8b6f0ca2cf75967e3)). Still, it could be argued that these rules might be a good way to limit low-level, widespread, attack attempts.
 
 ## Finding ASR rules implementation
 
@@ -637,9 +637,43 @@ end
 
 ```
 
-### Hidden rule
+### Rule example 3: Controlled folder access
 
-There is even an undocumented rule:
+Using the same construction pattern:
+```lua
+GetRuleInfo = function()
+  -- function num : 0_0
+  local l_1_0 = {}
+  l_1_0.Name = "Controlled folder access"
+  l_1_0.Description = "Windows Defender Exploit Guard detected the unauthorized modification of files in protected folder"
+  return l_1_0
+end
+
+GetPathExclusions = function()
+  -- function num : 0_1
+  local l_2_0 = {}
+  l_2_0["%windir%\\SysWOW64\\WerFault.exe"] = 2
+  l_2_0["%windir%\\system32\\WerFault.exe"] = 2
+  l_2_0.Registry = 2
+  l_2_0.MemCompression = 2
+  l_2_0["%windir%\\system32\\bcdedit.exe"] = 2
+  l_2_0["%windir%\\system32\\MBR2GPT.EXE"] = 2
+  l_2_0["%windir%\\system32\\CompatTelRunner.exe"] = 2
+  l_2_0["%windir%\\system32\\ReAgentc.exe"] = 2
+  l_2_0["%localappdata%\\microsoft\\Teams\\Update.exe "] = 1
+  l_2_0["%systemdrive%\\$WINDOWS.~BT\\Sources\\SetupHost.exe"] = 2
+  l_2_0["%systemdrive%\\$WINDOWS.~BT\\Work\\*\\DismHost.exe"] = 2
+  return l_2_0
+end
+```
+
+Actually, this rule does not belong to the ASR rules, but rather to [Controlled folder access](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/controlled-folders?view=o365-worldwide) (still in the "Attack surface reduction" documentation, but at the same level than "Exploit protection" or "Web protection").
+
+According to the header just before the precompiled script, its GUID is `5737d832-9e2c-4922-9623-48a220290dcb`.
+
+### Hidden rules
+
+There is even some undocumented rules:
 
 ```lua
 GetRuleInfo = function()
@@ -694,6 +728,8 @@ end
 ```
 
 Its GUID, according to the header before the Lua compiled script, is `a1ef78eb-fe9b-4fb2-b548-50b85b4d2af7`.
+
+Another rule, *Block abuse of in-the-wild exploited vulnerable signed drivers* (GUID `56a863a9-875e-4185-98a7-b882c64b5ce5`) can be found this way. This rule seems more production-oriented, but at the time of writing, there is no hit on Google.
 
 ## Profit
 
