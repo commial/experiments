@@ -731,6 +731,18 @@ Its GUID, according to the header before the Lua compiled script, is `a1ef78eb-f
 
 Another rule, *Block abuse of in-the-wild exploited vulnerable signed drivers* (GUID `56a863a9-875e-4185-98a7-b882c64b5ce5`) can be found this way. This rule seems more production-oriented, but at the time of writing, there is no hit on Google (still, it seems related to [this tweet](https://twitter.com/dwizzzlemsft/status/1267507875619848198?lang=en)).
 
+Here is a list of other undocumented rule:
+
+* *MSFT org test rule* (`1d9fb1e9-5186-49a5-92bd-86a3db551b47`)
+> This is a Test HIPS Rule that exposes rule logic in audit mode to \'X\' population within MSFT org
+* *Double Extension rule for consumer* (`fd960b4a-d8d7-4590-a6ce-0219df56a135`)
+> Block malicious double extension
+* *Aplha Test for ASR in Block Mode* (`c28bf0fb-388c-438b-a41d-8688461af900`)
+> Generic ASR Block mode use for unit testing
+* *WIAD org test rule* (`caf67f1f-2ab8-4d6b-9146-52ebe33baeba`)
+> This is a Test HIPS Rule that exposes rule logic in audit mode to entire WIAD org
+
+
 ## Profit
 
 As we now have access to the actual checks made, we can search for bypasses.
