@@ -1,6 +1,6 @@
 # Attack Surface Reduction
 
-[Attack Surface Reduction (ASR)](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/overview-attack-surface-reduction?view=o365-worldwide) is a Microsoft feature to "Reduce vulnerabilities (attack surfaces) in your applications with intelligent rules that help stop malware.".
+[Attack Surface Reduction (ASR)](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/overview-attack-surface-reduction?view=o365-worldwide) is a Microsoft feature to *Reduce vulnerabilities (attack surfaces) in your applications with intelligent rules that help stop malware*.
 
 This repository tries to describe what are the rules and what they are actually checking.
 This is likely not complete, and only limited to the author's comprehension of ASR.
@@ -23,14 +23,14 @@ It looks like the ASR rules are implemented and enforced by Windows Defender.
 
 The rules are configured through the registry key `HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules`.
 
-For instance, to enable the rule "Use advanced protection against ransomware" (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one adds a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
+For instance, to enable the rule *Use advanced protection against ransomware* (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one adds a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
 
-As expected, on `Windows Defender Service` start, one can observe the key reading from `MsMpEng`, the Windows Defender engine:
+As expected, on `Windows Defender Service` start, `MsMpEng` (the Windows Defender engine) reads the registry key:
 ![](img/procmon_msmpeng.png)
 
 ### Looking for our GUIDs
 
-Windows Defender is made of several parts, including:
+Windows Defender is made of several components, including:
 
 * WdFilter, the filter driver ([here](https://www.n4r1b.com/posts/2020/01/dissecting-the-windows-defender-driver-wdfilter-part-1/) is a good ressource about it)
 * WdBoot, the ELAM part
@@ -43,6 +43,7 @@ As the rules [are referenced with GUID](https://docs.microsoft.com/en-us/microso
 But we can look further in the VDM files. One can retrieve their content using [WDExtract](https://github.com/hfiref0x/WDExtract).
 
 Looking for one of the GUID (`be9ba2d9-53ea-4cdc-84e5-9b1eeee46550`), we have a hit in `mpasbase.vdm.extracted`, more specifically in the DLL `module1025.dll`:
+
 ![](img/hex_guid_found.png)
 
 Looking above:
@@ -638,7 +639,7 @@ end
 
 ### Hidden rule
 
-We can even find an undocumented rule:
+There is even an undocumented rule:
 
 ```lua
 GetRuleInfo = function()
@@ -698,7 +699,7 @@ Its GUID, according to the header before the Lua compiled script, is `a1ef78eb-f
 
 As we now have access to the actual checks made, we can search for bypasses.
 
-For instance, let's have a look at the GUID `3B576869-A4EC-4529-8536-B80A7769E899`, "Block Office applications from creating executable content".
+For instance, let's have a look at the GUID `3B576869-A4EC-4529-8536-B80A7769E899`, *Block Office applications from creating executable content*.
 
 Here is one of the concerned rule:
 
@@ -750,16 +751,17 @@ A list of extensions is then prepared. This is the list of extensions considered
 For instance, we can test that rule using the demo [ASR test tool](https://demo.wd.microsoft.com/Page/ASR2).
 
 First, we enable the rule:
+
 ![](img/rule_enable_3B.png)
 
 Then we run the test scenario:
 
 ![](img/asr_test_tool.png)
 
-The tool is actually creating a fake file (here `C:\Program Files\Microsoft Office\Office16\excel.exe`) which will create a file with a forgiven extension. As the test made by ASR is based on ImagePath, it is indeed blocked.
+The tool is actually creating a fake file (here `C:\Program Files\Microsoft Office\Office16\excel.exe`) which will create a file with a forbidden extension. As the test made by ASR is based on ImagePath, it is indeed blocked.
 
 We can ensure the option is actually working for real using VBA in Excel.
-We write a dummy *download-and-exec* script, and lauch it in Excel:
+We write a dummy *download-and-exec* script, and launch it in Excel:
 
 ![](img/ASR_excel_block.png)
 
