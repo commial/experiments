@@ -729,7 +729,7 @@ end
 
 Its GUID, according to the header before the Lua compiled script, is `a1ef78eb-fe9b-4fb2-b548-50b85b4d2af7`.
 
-Another rule, *Block abuse of in-the-wild exploited vulnerable signed drivers* (GUID `56a863a9-875e-4185-98a7-b882c64b5ce5`) can be found this way. This rule seems more production-oriented, but at the time of writing, there is no hit on Google.
+Another rule, *Block abuse of in-the-wild exploited vulnerable signed drivers* (GUID `56a863a9-875e-4185-98a7-b882c64b5ce5`) can be found this way. This rule seems more production-oriented, but at the time of writing, there is no hit on Google (still, it seems related to [this tweet](https://twitter.com/dwizzzlemsft/status/1267507875619848198?lang=en)).
 
 ## Profit
 
