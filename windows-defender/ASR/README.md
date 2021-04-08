@@ -2,10 +2,10 @@
 
 [Attack Surface Reduction (ASR)](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/overview-attack-surface-reduction?view=o365-worldwide) is a Microsoft feature to *Reduce vulnerabilities (attack surfaces) in your applications with intelligent rules that help stop malware*.
 
-This repository tries to describe what are the rules and what they are actually checking.
-This is likely not complete, and only limited to the author's comprehension of ASR.
+This repository tries to describe what the rules are and what they are actually checking.
+This is likely incomplete, and only limited to the author's understanding of ASR.
 
-Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf) or [this gist from infosecn1nja](https://gist.github.com/infosecn1nja/24a733c5b3f0e5a8b6f0ca2cf75967e3)). Still, it could be argued that these rules might be a good way to limit low-level, widespread, attack attempts.
+Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf) or [this gist from infosecn1nja](https://gist.github.com/infosecn1nja/24a733c5b3f0e5a8b6f0ca2cf75967e3)). Still, it could be argued that these rules might be a good way to limit low-level, widespread attack attempts.
 
 ## Finding ASR rules implementation
 
@@ -21,7 +21,7 @@ Another hint can be found in the [FAQ](https://docs.microsoft.com/en-us/microsof
 
 It looks like the ASR rules are implemented and enforced by Windows Defender.
 
-The rules are configured through the registry key `HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules`.
+The rules are configured through the following registry key: `HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules`.
 
 For instance, to enable the rule *Use advanced protection against ransomware* (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one adds a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
 
@@ -38,9 +38,9 @@ Windows Defender is made of several components, including:
 * `mpengine.dll`: the actual engine implementation
 * `mpasbase.vdm`, `mpavbase.vdm`: engine ressources (signatures, emulation ressources, etc.)
 
-As the rules [are referenced with GUID](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/attack-surface-reduction?view=o365-worldwide#attack-surface-reduction-rules), one can look for them in these binaries. Unfortunately, this naive approach does not yield result.
+As the rules [are referenced with GUID](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/attack-surface-reduction?view=o365-worldwide#attack-surface-reduction-rules), they can be looked for in these binaries. Unfortunately, this naive approach does not yield any result.
 
-But we can look further in the VDM files. One can retrieve their content using [WDExtract](https://github.com/hfiref0x/WDExtract).
+But we can look further in the VDM files. Their content can be retrieved using [WDExtract](https://github.com/hfiref0x/WDExtract).
 
 Looking for one of the GUID (`be9ba2d9-53ea-4cdc-84e5-9b1eeee46550`), we have a hit in `mpasbase.vdm.extracted`, more specifically in the DLL `module1025.dll`:
 
@@ -75,7 +75,7 @@ mimikatz # !processprotect /process:msMpEng.exe /remove
 Process : msMpEng.exe
 PID 1936 -> 00/00 [0-0-0]
 ```
-* The driver part registers a `ObRegisterCallback` to [defend himself against memory reads/writes from other processes](https://www.n4r1b.com/posts/2020/03/dissecting-the-windows-defender-driver-wdfilter-part-3/). One way to remove it is to attach a kernel debugger to our target system and "NOP" the function:
+* The driver part registers a `ObRegisterCallback` to [defend itself against memory reads/writes from other processes](https://www.n4r1b.com/posts/2020/03/dissecting-the-windows-defender-driver-wdfilter-part-3/). One way to remove it is to attach a kernel debugger to our target system and "NOP" the function:
 ```
 kd> a WdFilter!MpObPreOperationCallback
 fffff801`beb3ef40 xor eax,eax
@@ -83,21 +83,21 @@ fffff801`beb3ef42 ret
 fffff801`beb3ef43
 ```
 
-(This method is also documented [here](https://qiita.com/msmania/items/19547606b9c197c64d70) or [here](https://github.com/Mattiwatti/PPLKiller/pull/6#issuecomment-346198366), and on some cheating forums :) )
+(This method is also documented [here](https://qiita.com/msmania/items/19547606b9c197c64d70) and [here](https://github.com/Mattiwatti/PPLKiller/pull/6#issuecomment-346198366), and on some cheating forums :) )
 
-Now we can set a breakpoint on `IsHipsRuleEnabled`. Asking for a scan on a file, our breakpoint is reached; looking at the call stack, it indeed comes from the Lua interpretor, especially the `luaD_precall` and `luaD_call` functions.
+Now we can set a breakpoint on `IsHipsRuleEnabled`. Upon manually scanning a file, our breakpoint is reached; looking at the call stack, it indeed comes from the Lua interpretor, especially the `luaD_precall` and `luaD_call` functions.
 
 ### Decompiling the scripts
 
 Let's extract the script starting at `\x1bLua`.
-If we try to decompile it using standard tools as [luadec](https://github.com/viruscamp/luadec), we unfortunately fail on:
+Trying to decompile it using standard tools as [luadec](https://github.com/viruscamp/luadec) unfortunately fails on:
 ```
 out.1.luac: bad header in precompiled chunk
 ```
 
 Still, the project is working on sample scripts compiled with `lua-5.1`. 
 
-Digging into the format, using [A No-Frills Introduction to Lua 5.1 VM Instructions](http://luaforge.net/docman/83/98/ANoFrillsIntroToLua51VMInstructions.pdf) ([mirror](http://underpop.free.fr/l/lua/docs/a-no-frills-introduction-to-lua-5.1-vm-instructions.pdf)), the difference seems to be in the header and data structure sizes.
+Digging into the format, according to [A No-Frills Introduction to Lua 5.1 VM Instructions](http://luaforge.net/docman/83/98/ANoFrillsIntroToLua51VMInstructions.pdf) ([mirror](http://underpop.free.fr/l/lua/docs/a-no-frills-introduction-to-lua-5.1-vm-instructions.pdf)), the difference seems to be in the header and data structure sizes.
 
 Using a [naive script](https://github.com/commial/experiments/tree/master/windows-defender/lua), one can convert the Lua from VDM files into a precompiled script that `luadec` can deal with.
 
@@ -223,22 +223,22 @@ The first function `l_0_0` returns if the parameter is one of the following exte
 
 The main code first checks if the rules are enabled in the `HipsManager`.
 
-Then, it checks the reason it has been called (`mp.SCANREASON_ONMODIFIEDHANDLECLOSE`, `mp.SCANREASON_ONOPEN`, etc.), if it is a fresh data, the header page size, a magic (`PK\x03\x04`), and so on.
+Then, it checks the reason it has been called (`mp.SCANREASON_ONMODIFIEDHANDLECLOSE`, `mp.SCANREASON_ONOPEN`, etc.), if it is fresh data, the header page size, a magic (`PK\x03\x04`), and so on.
 
-Note that at one point, it is setting an attribute:
+Note that at one point it is setting an attribute:
 ```lua
 (mp.set_mpattribute)("Lua:ZipHasEncryptedFileWithExeExtension")
 ```
 
-From the understanding of the author, this attribute can then be reused by others scripts, in their own checks.
+From the understanding of the author, this attribute can then be reused by other script, in their own checks.
 
 ## ASR specific rules
 
 ### Rule registration
 
-If we come accross the different scripts that can be extracted, we found a lot of different things:
+By looking through the different scripts that can be extracted, we find a lot of different things:
 
-* "Infrastructure" scripts, used to check some configurations, restore host files, etc.
+* "Infrastructure" scripts, used to check some configurations, restore host files, etc.:
 ```lua
 Infrastructure_FixHostsFile = function()
   -- function num : 0_100
@@ -252,13 +252,13 @@ Infrastructure_FixHostsFile = function()
 ...
 ```
 
-* Malware scanning / heuristics scripts, used to check against known signature or behavior
+* Malware scanning / heuristic scripts, used to check against known signatures or behaviors:
 
 ```lua
 if ((((((((((((mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!cert") and not (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!mz")) or (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!dllcheck")) and not (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!MachineType")) or (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!MagicType")) and not (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!VirtualAlloc")) or (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!memcpy")) and not (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!CreateThread")) or (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!IsWow64Process")) and not (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!WriteShellCode")) or (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!GetProcAddressSCx64")) and not (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!GetProcAddressSCx86")) or (mp.get_mpattribute)("SCRIPT:PowerShell/Mikatz!Invoke") then
 ```
 
-* Helpers
+* Helpers:
 
 ```lua
 GetCtxOfficeProc = function()
@@ -294,7 +294,7 @@ end
 
 * ...
 
-Eventually, we found generic scripts for the ASR rules. These scripts define a few functions to provides generic ASR parameters for each rules.
+Eventually, we find generic scripts for the ASR rules. These scripts define a few functions that provide generic ASR parameters for each rules.
 
 For instance:
 ```lua
@@ -326,10 +326,10 @@ GetPathExclusions = function()
 end
 ```
 
-These functions are called from the MpEngine side, in `HipsManager::LoadRulesFromDatabase` > `CallInitScripts`:
+These functions are called from the MpEngine side, in: `HipsManager::LoadRulesFromDatabase` > `CallInitScripts`:
 ![](img/ida_callinitscripts.png)
 
-We can track the structure instantiated in these function to see them used in `HipsManager::IsASRExcludedTarget` > `HipsManager::IsRuleExcludedTarget`, for example.
+We can track the structure instantiated in this function to see them used in `HipsManager::IsASRExcludedTarget` > `HipsManager::IsRuleExcludedTarget`, for instance.
 
 ### Rule example 2: Block Adobe Reader from creating child processes
 
@@ -737,7 +737,7 @@ As we now have access to the actual checks made, we can search for bypasses.
 
 For instance, let's have a look at the GUID `3B576869-A4EC-4529-8536-B80A7769E899`, *Block Office applications from creating executable content*.
 
-Here is one of the concerned rule:
+Here is one of the relevant rule:
 
 ```lua
 if not (mp.IsHipsRuleEnabled)("3b576869-a4ec-4529-8536-b80a7769e899") then
@@ -784,7 +784,7 @@ A list of extensions is then prepared. This is the list of extensions considered
 
 ### Expected behavior
 
-For instance, we can test that rule using the demo [ASR test tool](https://demo.wd.microsoft.com/Page/ASR2).
+We can test that rule using the demo [ASR test tool](https://demo.wd.microsoft.com/Page/ASR2).
 
 First, we enable the rule:
 
@@ -794,7 +794,7 @@ Then we run the test scenario:
 
 ![](img/asr_test_tool.png)
 
-The tool is actually creating a fake file (here `C:\Program Files\Microsoft Office\Office16\excel.exe`) which will create a file with a forbidden extension. As the test made by ASR is based on ImagePath, it is indeed blocked.
+The tool is actually creating a fake file (here `C:\Program Files\Microsoft Office\Office16\excel.exe`) which will in turn create a file with a forbidden extension. As the test made by ASR is based on ImagePath, it is indeed blocked.
 
 We can ensure the option is actually working for real using VBA in Excel.
 We write a dummy *download-and-exec* script, and launch it in Excel:
@@ -939,7 +939,7 @@ end
 
 If the target extension is `.exe` but there is a directory named `think-cell` somewhere in the path, then it is OK.
 
-Let's check-it out !
+Let's check-it out!
 
 ![](img/block_no_think.png)
 
@@ -947,6 +947,6 @@ We first try with a directory close to the one whitelisted, but still different.
 
 ![](img/block_with_think.png)
 
-Now, we use the whitelisted directory and: Voilà!
+Now, we use the whitelisted directory and, voilà!
 
 **The executable creation is now authorized**, and our binary executed.
