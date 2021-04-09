@@ -2,10 +2,10 @@
 
 [Attack Surface Reduction (ASR)](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/overview-attack-surface-reduction?view=o365-worldwide) is a Microsoft feature to *Reduce vulnerabilities (attack surfaces) in your applications with intelligent rules that help stop malware*.
 
-This repository tries to describe what the rules are and what they are actually checking.
+This repository tries to describe what the rules are and what they actually check.
 This is likely incomplete, and only limited to the author's understanding of ASR.
 
-Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf) or [this gist from infosecn1nja](https://gist.github.com/infosecn1nja/24a733c5b3f0e5a8b6f0ca2cf75967e3)). Still, it could be argued that these rules might be a good way to limit low-level, widespread attack attempts.
+Note: A few ASR bypasses are already known (as the ones from [Emeric Nasi from SEVAGAS](https://blog.sevagas.com/IMG/pdf/bypass_windows_defender_attack_surface_reduction.pdf) or [this gist from infosecn1nja](https://gist.github.com/infosecn1nja/24a733c5b3f0e5a8b6f0ca2cf75967e3)). Still, one could argue that these rules might be a good way to limit low-level, widespread attack attempts.
 
 ## Finding ASR rules implementation
 
@@ -19,11 +19,11 @@ Another hint can be found in the [FAQ](https://docs.microsoft.com/en-us/microsof
 
 > ASR was ....  introduced as a major update to Microsoft Defender Antivirus
 
-It looks like the ASR rules are implemented and enforced by Windows Defender.
+It looks like ASR rules are implemented and enforced by Windows Defender.
 
-The rules are configured through the following registry key: `HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules`.
+Rules are configured through the following registry key: `HKLM\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\ASR\Rules`.
 
-For instance, to enable the rule *Use advanced protection against ransomware* (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one adds a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
+For instance, to enable the *Use advanced protection against ransomware* rule (GUID `c1db55ab-c21a-4637-bb3f-a12568109d35`), one adds a registry value `c1db55ab-c21a-4637-bb3f-a12568109d35` set to `1`, to the aforementioned registry key.
 
 As expected, on `Windows Defender Service` start, `MsMpEng` (the Windows Defender engine) reads the registry key:
 ![](img/procmon_msmpeng.png)
@@ -40,7 +40,7 @@ Windows Defender is made of several components, including:
 
 As the rules [are referenced with GUID](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/attack-surface-reduction?view=o365-worldwide#attack-surface-reduction-rules), they can be looked for in these binaries. Unfortunately, this naive approach does not yield any result.
 
-But we can look further in the VDM files. Their content can be retrieved using [WDExtract](https://github.com/hfiref0x/WDExtract).
+But we can look further in the VDM files. Their contents can be retrieved using [WDExtract](https://github.com/hfiref0x/WDExtract).
 
 Looking for one of the GUID (`be9ba2d9-53ea-4cdc-84e5-9b1eeee46550`), we have a hit in `mpasbase.vdm.extracted`, more specifically in the DLL `module1025.dll`:
 
@@ -95,7 +95,7 @@ Trying to decompile it using standard tools as [luadec](https://github.com/virus
 out.1.luac: bad header in precompiled chunk
 ```
 
-Still, the project is working on sample scripts compiled with `lua-5.1`. 
+Still, the project works on sample scripts compiled with `lua-5.1`.
 
 Digging into the format, according to [A No-Frills Introduction to Lua 5.1 VM Instructions](http://luaforge.net/docman/83/98/ANoFrillsIntroToLua51VMInstructions.pdf) ([mirror](http://underpop.free.fr/l/lua/docs/a-no-frills-introduction-to-lua-5.1-vm-instructions.pdf)), the difference seems to be in the header and data structure sizes.
 
@@ -225,12 +225,12 @@ The main code first checks if the rules are enabled in the `HipsManager`.
 
 Then, it checks the reason it has been called (`mp.SCANREASON_ONMODIFIEDHANDLECLOSE`, `mp.SCANREASON_ONOPEN`, etc.), if it is fresh data, the header page size, a magic (`PK\x03\x04`), and so on.
 
-Note that at one point it is setting an attribute:
+Note that at one point it sets an attribute:
 ```lua
 (mp.set_mpattribute)("Lua:ZipHasEncryptedFileWithExeExtension")
 ```
 
-From the understanding of the author, this attribute can then be reused by other script, in their own checks.
+From the understanding of the author, this attribute can then be reused by other scripts, in their own checks.
 
 ## ASR specific rules
 
@@ -329,7 +329,7 @@ end
 These functions are called from the MpEngine side, in: `HipsManager::LoadRulesFromDatabase` > `CallInitScripts`:
 ![](img/ida_callinitscripts.png)
 
-We can track the structure instantiated in this function to see them used in `HipsManager::IsASRExcludedTarget` > `HipsManager::IsRuleExcludedTarget`, for instance.
+We can track the structure instantiated in this function to see it used in `HipsManager::IsASRExcludedTarget` > `HipsManager::IsRuleExcludedTarget`, for instance.
 
 ### Rule example 2: Block Adobe Reader from creating child processes
 
@@ -667,13 +667,13 @@ GetPathExclusions = function()
 end
 ```
 
-Actually, this rule does not belong to the ASR rules, but rather to [Controlled folder access](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/controlled-folders?view=o365-worldwide) (still in the "Attack surface reduction" documentation, but at the same level than "Exploit protection" or "Web protection").
+Actually, this rule does not belong to the ASR rules, but rather to [Controlled folder access](https://docs.microsoft.com/en-us/microsoft-365/security/defender-endpoint/controlled-folders?view=o365-worldwide) (still in the "Attack surface reduction" documentation, but at the same level as "Exploit protection" or "Web protection").
 
 According to the header just before the precompiled script, its GUID is `5737d832-9e2c-4922-9623-48a220290dcb`.
 
 ### Hidden rules
 
-There is even some undocumented rules:
+There are even some undocumented rules:
 
 ```lua
 GetRuleInfo = function()
@@ -731,7 +731,7 @@ Its GUID, according to the header before the Lua compiled script, is `a1ef78eb-f
 
 Another rule, *Block abuse of in-the-wild exploited vulnerable signed drivers* (GUID `56a863a9-875e-4185-98a7-b882c64b5ce5`) can be found this way. This rule seems more production-oriented, but at the time of writing, there is no hit on Google (still, it seems related to [this tweet](https://twitter.com/dwizzzlemsft/status/1267507875619848198?lang=en)).
 
-Here is a list of other undocumented rule:
+Here is a list of other undocumented rules:
 
 * *MSFT org test rule* (`1d9fb1e9-5186-49a5-92bd-86a3db551b47`)
 > This is a Test HIPS Rule that exposes rule logic in audit mode to \'X\' population within MSFT org
@@ -761,7 +761,7 @@ end
 ```
 
 First, the code checks if the rule is indeed enabled, and if the process making the content creation is marked `productivity` by `GetCtxOfficeProc` (its code is above).
-Let's consider we are using Excel, so the check is valid.
+Let's imagine we are using Excel, so the check is valid.
 
 ```lua
 local l_0_0 = {}
@@ -942,7 +942,7 @@ end
 ```
 
 Some of them are hardly exploitable, as they check the whole path.
-But others seem' really interesting, such as:
+But others seem really interesting, such as:
 ```lua
 if l_0_3 == ".exe" and l_0_4:find("\\think-cell\\", 1, true) ~= nil then
     return mp.CLEAN
@@ -951,7 +951,7 @@ end
 
 If the target extension is `.exe` but there is a directory named `think-cell` somewhere in the path, then it is OK.
 
-Let's check-it out!
+Let's check it out!
 
 ![](img/block_no_think.png)
 
@@ -961,4 +961,4 @@ We first try with a directory close to the one whitelisted, but still different.
 
 Now, we use the whitelisted directory and, voilà!
 
-**The executable creation is now authorized**, and our binary executed.
+**Creating and executing our binary is now authorized**.
