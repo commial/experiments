@@ -52,7 +52,7 @@ modprobe_init ()
 ```
 
 The file signature was previously checked with a call to `preload_database()`.
-Interestingly, there is a preload of `mpinternal.vdm`, an undocumented and absent VDM database. It is likely used for MpEngine development inside Microsoft.
+Interestingly, there is a preload of `mpinternal.vdm`, an undocumented and absent VDM database. It is likely used by MpEngine development team inside Microsoft.
 
 ### Signature format
 
@@ -254,7 +254,7 @@ SIGNATURE_TYPE_THREAT_BEGIN (0x21)
 ...
 ```
 
-### Handling in the code
+### Actual implementation
 
 To understand how each of these signature works, one can look at how they are handled by the code.
 
@@ -705,7 +705,7 @@ A few example:
 ![](img/random_forest.png)
 ![](img/tree_dot.png)
 
-Some of this variable are surrounded by `SIGNATURE_TYPE_VERSIONCHECK` entries. It might suggest that they are only take in account if the version is matching the ones expected.
+Some of these variables are surrounded by `SIGNATURE_TYPE_VERSIONCHECK` entries. It might suggest that they are only take in account if the version is matching the ones expected.
 
 As an example :
 ```
