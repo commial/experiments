@@ -1,0 +1,31 @@
+diff --git a/peloader/winapi/Environment.c b/peloader/winapi/Environment.c
+index cccb685..45fd103 100644
+--- a/peloader/winapi/Environment.c
++++ b/peloader/winapi/Environment.c
+@@ -53,6 +53,8 @@ STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD
+         memcpy(lpBuffer, L"1", sizeof(L"1"));
+     } else if (strcmp(AnsiName, "MP_METASTORE_DISABLE") == 0) {
+         memcpy(lpBuffer, L"1", sizeof(L"1"));
++    } else if (strcmp(AnsiName, "UNPACK_DIR") == 0) {
++        memcpy(lpBuffer, L"/tmp/unpack", sizeof(L"/tmp/unpack"));
+     } else {
+         SetLastError(ERROR_ENVVAR_NOT_FOUND);
+     }
+diff --git a/peloader/winapi/Files.c b/peloader/winapi/Files.c
+index f469367..6f0321c 100644
+--- a/peloader/winapi/Files.c
++++ b/peloader/winapi/Files.c
+@@ -135,7 +135,12 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
+             FileHandle = fopen(filename, "r");
+             break;
+         case CREATE_ALWAYS:
+-            FileHandle = fopen("/dev/null", "w");
++            // if destination startswith "/tmp/unpack/", go for it
++            if (strstr(filename, "/tmp/unpack/")) {
++                FileHandle = fopen(filename, "w");
++            } else {
++                FileHandle = fopen("/dev/null", "w");
++            }
+             break;
+         // This is the disposition used by CreateTempFile().
+         case CREATE_NEW:
