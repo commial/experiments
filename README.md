@@ -9,3 +9,4 @@ Repository of various experiments / PoC.
 * [Primary Group ID](windows/random_things/primaryGroupID): Analysis of security checks made on `primaryGroupID` AD attribute changes
 * [Unpacking with Windows Defender](windows-defender/unpacking): Re-using the unpackers built into Windows Defender
 * [Firejail no-execve](firejail/no-exec): Illustration of an issue when filtering the `execve` syscall for a target binary
+* [ALPC Monitoring](windows/alpc): Attempt to monitor ALPC calls, using WinDBG scripting and Dtrace
